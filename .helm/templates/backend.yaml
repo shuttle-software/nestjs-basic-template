@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}-backend
+  labels:
+    service: {{ .Chart.Name }}-backend
+spec:
+  replicas: {{ pluck .Values.global.env .Values.replicas | first }}
+  selector:
+    matchLabels:
+      service: {{ .Chart.Name }}-backend
+  template:
+    metadata:
+      labels:
+        service: {{ .Chart.Name }}-backend
+    spec:
+      nodeSelector:
+        doks.digitalocean.com/node-pool: default
+
+      containers:        
+      - name: {{ .Chart.Name }}-backend
+        image: {{ .Values.werf.image.backend }}
+
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8000
+            scheme: HTTP
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8000
+            scheme: HTTP
+
+        envFrom:
+        - configMapRef:
+            name: {{ .Chart.Name }}-env
+            
+      imagePullSecrets:
+      - name: {{ .Chart.Name }}-pullsecret
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Chart.Name }}-backend-svc
+spec:
+  selector:
+    service: {{ .Chart.Name }}-backend
+  clusterIP: None
+  ports:
+  - name: http
+    port: 8000
+  - name: socketio
+    port: 9000

@@ -1,0 +1,45 @@
+name: test-deployment
+
+concurrency: test-deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  converge:
+    name: Converge
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+        
+      - name: Append secrets
+        run: |
+          cat "${GITHUB_WORKSPACE}/.helm/values.tpl.yaml" >> "${GITHUB_WORKSPACE}/.helm/values.yaml"
+          echo $'\n${{ secrets.HELM_VALUES }}' >> "${GITHUB_WORKSPACE}/.helm/values.yaml"
+          cat "${GITHUB_WORKSPACE}/.helm/env.test.yaml" >> "${GITHUB_WORKSPACE}/.helm/env.yaml"
+          echo $'\n${{ secrets.HELM_TEST_ENV }}' >> "${GITHUB_WORKSPACE}/.helm/env.yaml"
+          cat "${GITHUB_WORKSPACE}/.helm/values.yaml"
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Prepare kubeconfig
+        run: doctl kubernetes cluster kubeconfig save ${{ secrets.KUBE_CLUSTER_ID }}
+
+      - name: Converge
+        uses: werf/actions/converge@v1.2
+        with:
+          env: test
+
+      # - name: Dismiss
+      #   uses: werf/actions/dismiss@v1.2
+      #   with:
+      #     env: test

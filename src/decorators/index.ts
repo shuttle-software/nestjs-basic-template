@@ -1,5 +1,7 @@
-import { EntityParam } from "./entity.decorator";
+// import { EntityParam } from "./entity.decorator";
+import { ModelParam } from "./model.decorator";
 
 export {
-  EntityParam,
+  // EntityParam,
+  ModelParam,
 }

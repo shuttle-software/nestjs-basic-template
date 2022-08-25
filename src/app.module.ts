@@ -1,31 +1,27 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { MongooseModule } from '@nestjs/mongoose';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'postgres',
+    MongooseModule.forRoot(process.env['MONGO_SRV'], {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      // useCreateIndex: true,
+      readPreference: 'primary',
+      writeConcern: { w: 'majority', j: true },
 
-      host: process.env['POSTGRES_HOST'],
-      port: parseInt(process.env['POSTGRES_PORT']),
-      username: process.env['POSTGRES_USER'],
-      password: process.env['POSTGRES_PASSWORD'],
-      database: process.env['POSTGRES_DATABASE'],
-
-      entities: ['dist/**/*.entity{.ts,.js}'],
-      synchronize: true,
-
-      // migrationsTableName: 'migration',
-      // migrations: ['src/migration/*.ts'],
-      // cli: {
-      //   migrationsDir: 'src/migration',
-      // },
-      // ssl: this.isProduction(),
+      connectionFactory: (connection) => {
+        global.$db = connection;
+        return connection;
+      }
     }),
+
     UsersModule,
   ],
-  controllers: [],
-  providers: [],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Chart.Name }}-redis-svc
+spec:
+  ports:
+  - port: 6379
+  clusterIP: None
+  selector:
+    service: {{ .Chart.Name }}-redis
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}-redis-set
+spec:
+  selector:
+    matchLabels:
+      service: {{ .Chart.Name }}-redis  # has to match .spec.template.metadata.labels
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        service: {{ .Chart.Name }}-redis  # has to match .spec.selector.matchLabels
+    spec:
+      nodeSelector:
+        doks.digitalocean.com/node-pool: default
+      containers:
+      - name: {{ .Chart.Name }}-redis
+        image: redis:6-alpine
+        ports:
+        - containerPort: 6379

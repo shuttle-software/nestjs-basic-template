@@ -4,8 +4,13 @@ export class InvalidInputException extends BadRequestException {
 
   errors: object
 
-  constructor(errors: object) {
+  constructor(name: object | string, msg?: string) {
     super();
-    this.errors = errors;
+    
+    if(typeof name === 'object') {
+      this.errors = name;
+    } else {
+      this.errors = { name, msg };
+    }
   }
 }

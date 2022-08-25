@@ -1,0 +1,35 @@
+project: api
+configVersion: 1
+---
+image: backend
+from: node:14-alpine
+git:
+- to: /usr/src/app
+  excludePaths:
+  - .github
+
+  stageDependencies:
+    install:
+    - package*.json
+    setup:
+    - "**/*"
+shell:
+
+  beforeInstallCacheVersion: 1
+
+  beforeInstall:
+  - apk update
+  - apk upgrade
+  - apk add --no-cache openssh
+
+  install:
+  - cd /usr/src/app
+  - npm i
+
+  setup:
+  - cd /usr/src/app
+  - npm run build
+
+docker:
+  WORKDIR: /usr/src/app
+  CMD: npm run start:prod

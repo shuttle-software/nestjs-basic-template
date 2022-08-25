@@ -1,0 +1,29 @@
+name: test-cleanup
+on:
+  schedule:
+  - cron:  '0 6 * * *'
+  repository_dispatch:
+    types: [ cleanup ]
+
+jobs:
+  cleanup:
+    name: Cleanup
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+
+    - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+    - name: Prepare kubeconfig
+      run: doctl kubernetes cluster kubeconfig save ${{ secrets.KUBE_CLUSTER_ID }}
+
+    - name: Cleanup
+      uses: werf/actions/cleanup@v1.2
